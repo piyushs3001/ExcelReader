@@ -113,7 +113,16 @@ class ExcelReader
             }
         }
 
-        $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+        $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+
+        // Provide helpful error for .xlsx when zip is not available
+        if ($extension === 'xlsx' && !XlsxReader::isZipExtensionAvailable()) {
+            throw new \RuntimeException(
+                "Cannot read .xlsx file: The PHP zip extension is not enabled. " .
+                "Please enable the zip extension or convert your file to .xls format."
+            );
+        }
+
         throw new \InvalidArgumentException(
             "No suitable reader found for file: {$filePath} (extension: {$extension})"
         );

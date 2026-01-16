@@ -17,9 +17,21 @@ use Piyush\ExcelImporter\Helpers\StringHelper;
  * - xl/sharedStrings.xml - All text strings (shared pool)
  * - xl/worksheets/sheet1.xml - Cell data for each sheet
  * - xl/styles.xml - Number formats (for date detection)
+ *
+ * Note: Requires PHP zip extension to be enabled.
  */
 class XlsxReader implements ReaderInterface
 {
+    /**
+     * Check if the zip extension is available
+     *
+     * @return bool
+     */
+    public static function isZipExtensionAvailable()
+    {
+        return extension_loaded('zip') && class_exists('ZipArchive');
+    }
+
     /**
      * @var \ZipArchive The ZIP archive
      */
@@ -65,6 +77,11 @@ class XlsxReader implements ReaderInterface
         $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
 
         if ($extension !== 'xlsx') {
+            return false;
+        }
+
+        // Check if zip extension is available
+        if (!self::isZipExtensionAvailable()) {
             return false;
         }
 
@@ -158,6 +175,13 @@ class XlsxReader implements ReaderInterface
     {
         if (!file_exists($filePath)) {
             throw new \RuntimeException("File not found: {$filePath}");
+        }
+
+        if (!self::isZipExtensionAvailable()) {
+            throw new \RuntimeException(
+                "The PHP zip extension is required to read .xlsx files. " .
+                "Please enable the zip extension or use .xls format instead."
+            );
         }
 
         $this->zip = new \ZipArchive();
